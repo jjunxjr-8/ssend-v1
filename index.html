@@ -1,12 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full w-full">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>5x5 Coordinate Keypad</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>5x5 Matrix Keypad</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-
     <script>
         tailwind.config = {
             theme: {
@@ -75,177 +74,185 @@
         }
     </style>
 </head>
-<body class="h-screen w-screen bg-slate-950 text-slate-100 flex items-center justify-center p-3 sm:p-6 overflow-hidden select-none">
+<body class="h-screen w-screen bg-slate-950 text-slate-100 flex flex-col p-2 sm:p-3 gap-2 sm:gap-3 overflow-hidden select-none">
 
-    <div class="w-full max-w-lg sm:max-w-xl bg-slate-900/90 border-2 border-slate-800/80 rounded-3xl p-3 sm:p-5 flex flex-col gap-3 shadow-2xl backdrop-blur-sm">
+    <!-- TOP HEADER BAR: Single Text Output Display & Control Buttons -->
+    <header class="flex-none bg-slate-900 border-2 border-slate-800 rounded-2xl p-2 sm:p-3 flex items-center justify-between gap-2 shadow-2xl">
+        
+        <!-- Text Result Display Box -->
+        <div class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 sm:py-3 flex items-center overflow-x-auto min-w-0">
+            <span id="outputDisplay" class="font-mono text-2xl sm:text-4xl font-extrabold tracking-wider text-emerald-400 whitespace-pre font-mono"></span>
+            <span class="w-3 h-7 sm:h-9 bg-emerald-400 inline-block ml-1 rounded-sm cursor-blink flex-none"></span>
+        </div>
 
-        <header class="bg-slate-950/80 border border-slate-800 rounded-2xl p-2 sm:p-2.5 flex items-center justify-between gap-2">
-            
-            <!-- Text Result Display Box -->
-            <div class="flex-1 bg-slate-950 border border-slate-800/80 rounded-xl px-3 py-1.5 sm:py-2 flex items-center overflow-x-auto min-w-0 h-11 sm:h-13">
-                <span id="outputDisplay" class="font-mono text-xl sm:text-3xl font-extrabold tracking-wider text-emerald-400 whitespace-pre"></span>
-                <span class="w-2.5 h-6 sm:h-8 bg-emerald-400 inline-block ml-1 rounded-sm cursor-blink flex-none"></span>
-            </div>
-
-            <!-- Compact Backspace & Clear Buttons -->
-            <div class="flex items-center gap-1.5 flex-none">
-                <!-- Backspace Button -->
-                <button id="btnBackspace" 
-                        class="interactive-btn h-11 sm:h-13 px-3 sm:px-4 bg-slate-800 border-slate-700 rounded-xl font-mono font-bold text-amber-400 flex items-center justify-center gap-1.5"
-                        data-action="BACKSPACE" 
-                        data-speech="backspace">
-                    <i class="fa-solid fa-delete-left text-base sm:text-lg pointer-events-none"></i>
-                    <span class="hidden sm:inline font-bold text-xs pointer-events-none">DEL</span>
-                </button>
-
-                <!-- Clear Button -->
-                <button id="btnClear" 
-                        class="interactive-btn h-11 sm:h-13 px-3 sm:px-4 bg-red-950/70 border-red-800 rounded-xl font-mono font-black text-red-400 text-xs sm:text-sm flex items-center justify-center"
-                        data-action="CLEAR" 
-                        data-speech="clear">
-                    <span class="pointer-events-none">CLR</span>
-                </button>
-            </div>
-        </header>
-
-        <main class="flex gap-2 sm:gap-2.5 w-full items-stretch">
-
-            <!-- LEFT EDGE SPACE BUTTON -->
-            <button class="interactive-btn w-10 sm:w-14 rounded-2xl bg-indigo-950/50 border-indigo-800/80 flex flex-col items-center justify-center gap-2 text-indigo-300 hover:text-white flex-none py-2"
-                    data-char=" " 
-                    data-speech="space" 
-                    data-action="SPACE">
-                <i class="fa-solid fa-arrows-left-right text-sm sm:text-base pointer-events-none"></i>
-                <span class="font-black text-[10px] sm:text-xs tracking-widest vertical-text rotate-180 pointer-events-none">SPACE</span>
-                <i class="fa-solid fa-arrows-left-right text-sm sm:text-base pointer-events-none"></i>
+        <!-- Compact Backspace, Clear & Send Buttons -->
+        <div class="flex items-center gap-2 flex-none">
+            <!-- Backspace Button -->
+            <button id="btnBackspace" 
+                    class="interactive-btn h-11 sm:h-14 px-3 sm:px-5 bg-slate-800 border-slate-700 rounded-xl font-mono font-bold text-amber-400 flex items-center justify-center gap-1.5"
+                    data-action="BACKSPACE" 
+                    data-speech="backspace">
+                <i class="fa-solid fa-delete-left text-lg sm:text-xl pointer-events-none"></i>
+                <span class="hidden sm:inline font-bold text-xs pointer-events-none">DEL</span>
             </button>
 
-            <!-- CENTER 5x5 KEYPAD GRID -->
-            <div id="gridContainer" class="flex-1 grid grid-cols-5 grid-rows-5 gap-1.5 sm:gap-2 w-full aspect-square">
-
-                <!-- Row 1: A, B, C, D, E -->
-                <button class="interactive-btn key-btn rounded-xl sm:rounded-2xl flex flex-col items-center justify-center p-1" data-char="A" data-speech="a" data-x="1" data-y="1">
-                    <span class="text-xl sm:text-3xl font-black tracking-tight pointer-events-none">A</span>
-                    <span class="text-[9px] sm:text-[11px] font-mono font-bold text-slate-400 pointer-events-none">(1,1)</span>
-                </button>
-                <button class="interactive-btn key-btn rounded-xl sm:rounded-2xl flex flex-col items-center justify-center p-1" data-char="B" data-speech="b" data-x="2" data-y="1">
-                    <span class="text-xl sm:text-3xl font-black tracking-tight pointer-events-none">B</span>
-                    <span class="text-[9px] sm:text-[11px] font-mono font-bold text-slate-400 pointer-events-none">(2,1)</span>
-                </button>
-                <button class="interactive-btn key-btn rounded-xl sm:rounded-2xl flex flex-col items-center justify-center p-1" data-char="C" data-speech="c" data-x="3" data-y="1">
-                    <span class="text-xl sm:text-3xl font-black tracking-tight pointer-events-none">C</span>
-                    <span class="text-[9px] sm:text-[11px] font-mono font-bold text-slate-400 pointer-events-none">(3,1)</span>
-                </button>
-                <button class="interactive-btn key-btn rounded-xl sm:rounded-2xl flex flex-col items-center justify-center p-1" data-char="D" data-speech="d" data-x="4" data-y="1">
-                    <span class="text-xl sm:text-3xl font-black tracking-tight pointer-events-none">D</span>
-                    <span class="text-[9px] sm:text-[11px] font-mono font-bold text-slate-400 pointer-events-none">(4,1)</span>
-                </button>
-                <button class="interactive-btn key-btn rounded-xl sm:rounded-2xl flex flex-col items-center justify-center p-1" data-char="E" data-speech="e" data-x="5" data-y="1">
-                    <span class="text-xl sm:text-3xl font-black tracking-tight pointer-events-none">E</span>
-                    <span class="text-[9px] sm:text-[11px] font-mono font-bold text-slate-400 pointer-events-none">(5,1)</span>
-                </button>
-
-                <!-- Row 2: F, G, H, I, J -->
-                <button class="interactive-btn key-btn rounded-xl sm:rounded-2xl flex flex-col items-center justify-center p-1" data-char="F" data-speech="f" data-x="1" data-y="2">
-                    <span class="text-xl sm:text-3xl font-black tracking-tight pointer-events-none">F</span>
-                    <span class="text-[9px] sm:text-[11px] font-mono font-bold text-slate-400 pointer-events-none">(1,2)</span>
-                </button>
-                <button class="interactive-btn key-btn rounded-xl sm:rounded-2xl flex flex-col items-center justify-center p-1" data-char="G" data-speech="g" data-x="2" data-y="2">
-                    <span class="text-xl sm:text-3xl font-black tracking-tight pointer-events-none">G</span>
-                    <span class="text-[9px] sm:text-[11px] font-mono font-bold text-slate-400 pointer-events-none">(2,2)</span>
-                </button>
-                <button class="interactive-btn key-btn rounded-xl sm:rounded-2xl flex flex-col items-center justify-center p-1" data-char="H" data-speech="h" data-x="3" data-y="2">
-                    <span class="text-xl sm:text-3xl font-black tracking-tight pointer-events-none">H</span>
-                    <span class="text-[9px] sm:text-[11px] font-mono font-bold text-slate-400 pointer-events-none">(3,2)</span>
-                </button>
-                <button class="interactive-btn key-btn rounded-xl sm:rounded-2xl flex flex-col items-center justify-center p-1" data-char="I" data-speech="i" data-x="4" data-y="2">
-                    <span class="text-xl sm:text-3xl font-black tracking-tight pointer-events-none">I</span>
-                    <span class="text-[9px] sm:text-[11px] font-mono font-bold text-slate-400 pointer-events-none">(4,2)</span>
-                </button>
-                <button class="interactive-btn key-btn rounded-xl sm:rounded-2xl flex flex-col items-center justify-center p-1" data-char="J" data-speech="j" data-x="5" data-y="2">
-                    <span class="text-xl sm:text-3xl font-black tracking-tight pointer-events-none">J</span>
-                    <span class="text-[9px] sm:text-[11px] font-mono font-bold text-slate-400 pointer-events-none">(5,2)</span>
-                </button>
-
-                <!-- Row 3: L, M, N, O, P -->
-                <button class="interactive-btn key-btn rounded-xl sm:rounded-2xl flex flex-col items-center justify-center p-1" data-char="L" data-speech="l" data-x="1" data-y="3">
-                    <span class="text-xl sm:text-3xl font-black tracking-tight pointer-events-none">L</span>
-                    <span class="text-[9px] sm:text-[11px] font-mono font-bold text-slate-400 pointer-events-none">(1,3)</span>
-                </button>
-                <button class="interactive-btn key-btn rounded-xl sm:rounded-2xl flex flex-col items-center justify-center p-1" data-char="M" data-speech="m" data-x="2" data-y="3">
-                    <span class="text-xl sm:text-3xl font-black tracking-tight pointer-events-none">M</span>
-                    <span class="text-[9px] sm:text-[11px] font-mono font-bold text-slate-400 pointer-events-none">(2,3)</span>
-                </button>
-                <button class="interactive-btn key-btn rounded-xl sm:rounded-2xl flex flex-col items-center justify-center p-1" data-char="N" data-speech="n" data-x="3" data-y="3">
-                    <span class="text-xl sm:text-3xl font-black tracking-tight pointer-events-none">N</span>
-                    <span class="text-[9px] sm:text-[11px] font-mono font-bold text-slate-400 pointer-events-none">(3,3)</span>
-                </button>
-                <button class="interactive-btn key-btn rounded-xl sm:rounded-2xl flex flex-col items-center justify-center p-1" data-char="O" data-speech="o" data-x="4" data-y="3">
-                    <span class="text-xl sm:text-3xl font-black tracking-tight pointer-events-none">O</span>
-                    <span class="text-[9px] sm:text-[11px] font-mono font-bold text-slate-400 pointer-events-none">(4,3)</span>
-                </button>
-                <button class="interactive-btn key-btn rounded-xl sm:rounded-2xl flex flex-col items-center justify-center p-1" data-char="P" data-speech="p" data-x="5" data-y="3">
-                    <span class="text-xl sm:text-3xl font-black tracking-tight pointer-events-none">P</span>
-                    <span class="text-[9px] sm:text-[11px] font-mono font-bold text-slate-400 pointer-events-none">(5,3)</span>
-                </button>
-
-                <!-- Row 4: Q, R, S, T, U -->
-                <button class="interactive-btn key-btn rounded-xl sm:rounded-2xl flex flex-col items-center justify-center p-1" data-char="Q" data-speech="q" data-x="1" data-y="4">
-                    <span class="text-xl sm:text-3xl font-black tracking-tight pointer-events-none">Q</span>
-                    <span class="text-[9px] sm:text-[11px] font-mono font-bold text-slate-400 pointer-events-none">(1,4)</span>
-                </button>
-                <button class="interactive-btn key-btn rounded-xl sm:rounded-2xl flex flex-col items-center justify-center p-1" data-char="R" data-speech="r" data-x="2" data-y="4">
-                    <span class="text-xl sm:text-3xl font-black tracking-tight pointer-events-none">R</span>
-                    <span class="text-[9px] sm:text-[11px] font-mono font-bold text-slate-400 pointer-events-none">(2,4)</span>
-                </button>
-                <button class="interactive-btn key-btn rounded-xl sm:rounded-2xl flex flex-col items-center justify-center p-1" data-char="S" data-speech="s" data-x="3" data-y="4">
-                    <span class="text-xl sm:text-3xl font-black tracking-tight pointer-events-none">S</span>
-                    <span class="text-[9px] sm:text-[11px] font-mono font-bold text-slate-400 pointer-events-none">(3,4)</span>
-                </button>
-                <button class="interactive-btn key-btn rounded-xl sm:rounded-2xl flex flex-col items-center justify-center p-1" data-char="T" data-speech="t" data-x="4" data-y="4">
-                    <span class="text-xl sm:text-3xl font-black tracking-tight pointer-events-none">T</span>
-                    <span class="text-[9px] sm:text-[11px] font-mono font-bold text-slate-400 pointer-events-none">(4,4)</span>
-                </button>
-                <button class="interactive-btn key-btn rounded-xl sm:rounded-2xl flex flex-col items-center justify-center p-1" data-char="U" data-speech="u" data-x="5" data-y="4">
-                    <span class="text-xl sm:text-3xl font-black tracking-tight pointer-events-none">U</span>
-                    <span class="text-[9px] sm:text-[11px] font-mono font-bold text-slate-400 pointer-events-none">(5,4)</span>
-                </button>
-
-                <!-- Row 5: V, W, X, Y, Z -->
-                <button class="interactive-btn key-btn rounded-xl sm:rounded-2xl flex flex-col items-center justify-center p-1" data-char="V" data-speech="v" data-x="1" data-y="5">
-                    <span class="text-xl sm:text-3xl font-black tracking-tight pointer-events-none">V</span>
-                    <span class="text-[9px] sm:text-[11px] font-mono font-bold text-slate-400 pointer-events-none">(1,5)</span>
-                </button>
-                <button class="interactive-btn key-btn rounded-xl sm:rounded-2xl flex flex-col items-center justify-center p-1" data-char="W" data-speech="w" data-x="2" data-y="5">
-                    <span class="text-xl sm:text-3xl font-black tracking-tight pointer-events-none">W</span>
-                    <span class="text-[9px] sm:text-[11px] font-mono font-bold text-slate-400 pointer-events-none">(2,5)</span>
-                </button>
-                <button class="interactive-btn key-btn rounded-xl sm:rounded-2xl flex flex-col items-center justify-center p-1" data-char="X" data-speech="x" data-x="3" data-y="5">
-                    <span class="text-xl sm:text-3xl font-black tracking-tight pointer-events-none">X</span>
-                    <span class="text-[9px] sm:text-[11px] font-mono font-bold text-slate-400 pointer-events-none">(3,5)</span>
-                </button>
-                <button class="interactive-btn key-btn rounded-xl sm:rounded-2xl flex flex-col items-center justify-center p-1" data-char="Y" data-speech="y" data-x="4" data-y="5">
-                    <span class="text-xl sm:text-3xl font-black tracking-tight pointer-events-none">Y</span>
-                    <span class="text-[9px] sm:text-[11px] font-mono font-bold text-slate-400 pointer-events-none">(4,5)</span>
-                </button>
-                <button class="interactive-btn key-btn rounded-xl sm:rounded-2xl flex flex-col items-center justify-center p-1" data-char="Z" data-speech="z" data-x="5" data-y="5">
-                    <span class="text-xl sm:text-3xl font-black tracking-tight pointer-events-none">Z</span>
-                    <span class="text-[9px] sm:text-[11px] font-mono font-bold text-slate-400 pointer-events-none">(5,5)</span>
-                </button>
-            </div>
-
-            <!-- RIGHT EDGE SPACE BUTTON -->
-            <button class="interactive-btn w-10 sm:w-14 rounded-2xl bg-indigo-950/50 border-indigo-800/80 flex flex-col items-center justify-center gap-2 text-indigo-300 hover:text-white flex-none py-2"
-                    data-char=" " 
-                    data-speech="space" 
-                    data-action="SPACE">
-                <i class="fa-solid fa-arrows-left-right text-sm sm:text-base pointer-events-none"></i>
-                <span class="font-black text-[10px] sm:text-xs tracking-widest vertical-text pointer-events-none">SPACE</span>
-                <i class="fa-solid fa-arrows-left-right text-sm sm:text-base pointer-events-none"></i>
+            <!-- Clear Button -->
+            <button id="btnClear" 
+                    class="interactive-btn h-11 sm:h-14 px-3 sm:px-5 bg-red-950/70 border-red-800 rounded-xl font-mono font-black text-red-400 text-sm sm:text-base flex items-center justify-center"
+                    data-action="CLEAR" 
+                    data-speech="clear">
+                <span class="pointer-events-none">CLR</span>
             </button>
 
-        </main>
-    </div>
+            <!-- Send Button -->
+            <button id="btnSend" 
+                    class="interactive-btn h-11 sm:h-14 px-3 sm:px-5 bg-emerald-950/80 border-emerald-700 rounded-xl font-mono font-bold text-emerald-400 flex items-center justify-center gap-1.5 hover:bg-emerald-800/80"
+                    data-action="SEND" 
+                    data-speech="send">
+                <i class="fa-solid fa-paper-plane text-lg sm:text-xl pointer-events-none"></i>
+                <span class="hidden sm:inline font-bold text-xs pointer-events-none">SEND</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN KEYPAD REGION: Edge Space Buttons + Center 5x5 Grid -->
+    <main class="flex-1 flex gap-2 sm:gap-3 w-full h-full min-h-0">
+
+        <!-- LEFT EDGE SPACE BUTTON -->
+        <button class="interactive-btn w-12 sm:w-20 lg:w-24 h-full rounded-2xl bg-indigo-950/40 border-indigo-800/80 flex flex-col items-center justify-center gap-3 text-indigo-300 hover:text-white flex-none"
+                data-char=" " 
+                data-speech="space" 
+                data-action="SPACE">
+            <i class="fa-solid fa-arrows-left-right text-xl sm:text-2xl pointer-events-none"></i>
+            <span class="font-black text-xs sm:text-base tracking-widest vertical-text rotate-180 pointer-events-none">SPACE</span>
+            <i class="fa-solid fa-arrows-left-right text-xl sm:text-2xl pointer-events-none"></i>
+        </button>
+
+        <!-- CENTER 5x5 KEYPAD GRID -->
+        <div id="gridContainer" class="flex-1 grid grid-cols-5 grid-rows-5 gap-2 sm:gap-3 w-full h-full">
+
+            <!-- Row 1: A, B, C, D, E -->
+            <button class="interactive-btn key-btn rounded-2xl flex flex-col items-center justify-center" data-char="A" data-speech="a" data-x="1" data-y="1">
+                <span class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight pointer-events-none">A</span>
+                <span class="text-[10px] sm:text-xs font-mono font-bold text-slate-400 mt-0.5 pointer-events-none">(1,1)</span>
+            </button>
+            <button class="interactive-btn key-btn rounded-2xl flex flex-col items-center justify-center" data-char="B" data-speech="b" data-x="2" data-y="1">
+                <span class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight pointer-events-none">B</span>
+                <span class="text-[10px] sm:text-xs font-mono font-bold text-slate-400 mt-0.5 pointer-events-none">(2,1)</span>
+            </button>
+            <button class="interactive-btn key-btn rounded-2xl flex flex-col items-center justify-center" data-char="C" data-speech="c" data-x="3" data-y="1">
+                <span class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight pointer-events-none">C</span>
+                <span class="text-[10px] sm:text-xs font-mono font-bold text-slate-400 mt-0.5 pointer-events-none">(3,1)</span>
+            </button>
+            <button class="interactive-btn key-btn rounded-2xl flex flex-col items-center justify-center" data-char="D" data-speech="d" data-x="4" data-y="1">
+                <span class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight pointer-events-none">D</span>
+                <span class="text-[10px] sm:text-xs font-mono font-bold text-slate-400 mt-0.5 pointer-events-none">(4,1)</span>
+            </button>
+            <button class="interactive-btn key-btn rounded-2xl flex flex-col items-center justify-center" data-char="E" data-speech="e" data-x="5" data-y="1">
+                <span class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight pointer-events-none">E</span>
+                <span class="text-[10px] sm:text-xs font-mono font-bold text-slate-400 mt-0.5 pointer-events-none">(5,1)</span>
+            </button>
+
+            <!-- Row 2: F, G, H, I, J -->
+            <button class="interactive-btn key-btn rounded-2xl flex flex-col items-center justify-center" data-char="F" data-speech="f" data-x="1" data-y="2">
+                <span class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight pointer-events-none">F</span>
+                <span class="text-[10px] sm:text-xs font-mono font-bold text-slate-400 mt-0.5 pointer-events-none">(1,2)</span>
+            </button>
+            <button class="interactive-btn key-btn rounded-2xl flex flex-col items-center justify-center" data-char="G" data-speech="g" data-x="2" data-y="2">
+                <span class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight pointer-events-none">G</span>
+                <span class="text-[10px] sm:text-xs font-mono font-bold text-slate-400 mt-0.5 pointer-events-none">(2,2)</span>
+            </button>
+            <button class="interactive-btn key-btn rounded-2xl flex flex-col items-center justify-center" data-char="H" data-speech="h" data-x="3" data-y="2">
+                <span class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight pointer-events-none">H</span>
+                <span class="text-[10px] sm:text-xs font-mono font-bold text-slate-400 mt-0.5 pointer-events-none">(3,2)</span>
+            </button>
+            <button class="interactive-btn key-btn rounded-2xl flex flex-col items-center justify-center" data-char="I" data-speech="i" data-x="4" data-y="2">
+                <span class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight pointer-events-none">I</span>
+                <span class="text-[10px] sm:text-xs font-mono font-bold text-slate-400 mt-0.5 pointer-events-none">(4,2)</span>
+            </button>
+            <button class="interactive-btn key-btn rounded-2xl flex flex-col items-center justify-center" data-char="J" data-speech="j" data-x="5" data-y="2">
+                <span class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight pointer-events-none">J</span>
+                <span class="text-[10px] sm:text-xs font-mono font-bold text-slate-400 mt-0.5 pointer-events-none">(5,2)</span>
+            </button>
+
+            <!-- Row 3: L, M, N, O, P -->
+            <button class="interactive-btn key-btn rounded-2xl flex flex-col items-center justify-center" data-char="L" data-speech="l" data-x="1" data-y="3">
+                <span class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight pointer-events-none">L</span>
+                <span class="text-[10px] sm:text-xs font-mono font-bold text-slate-400 mt-0.5 pointer-events-none">(1,3)</span>
+            </button>
+            <button class="interactive-btn key-btn rounded-2xl flex flex-col items-center justify-center" data-char="M" data-speech="m" data-x="2" data-y="3">
+                <span class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight pointer-events-none">M</span>
+                <span class="text-[10px] sm:text-xs font-mono font-bold text-slate-400 mt-0.5 pointer-events-none">(2,3)</span>
+            </button>
+            <button class="interactive-btn key-btn rounded-2xl flex flex-col items-center justify-center" data-char="N" data-speech="n" data-x="3" data-y="3">
+                <span class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight pointer-events-none">N</span>
+                <span class="text-[10px] sm:text-xs font-mono font-bold text-slate-400 mt-0.5 pointer-events-none">(3,3)</span>
+            </button>
+            <button class="interactive-btn key-btn rounded-2xl flex flex-col items-center justify-center" data-char="O" data-speech="o" data-x="4" data-y="3">
+                <span class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight pointer-events-none">O</span>
+                <span class="text-[10px] sm:text-xs font-mono font-bold text-slate-400 mt-0.5 pointer-events-none">(4,3)</span>
+            </button>
+            <button class="interactive-btn key-btn rounded-2xl flex flex-col items-center justify-center" data-char="P" data-speech="p" data-x="5" data-y="3">
+                <span class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight pointer-events-none">P</span>
+                <span class="text-[10px] sm:text-xs font-mono font-bold text-slate-400 mt-0.5 pointer-events-none">(5,3)</span>
+            </button>
+
+            <!-- Row 4: Q, R, S, T, U -->
+            <button class="interactive-btn key-btn rounded-2xl flex flex-col items-center justify-center" data-char="Q" data-speech="q" data-x="1" data-y="4">
+                <span class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight pointer-events-none">Q</span>
+                <span class="text-[10px] sm:text-xs font-mono font-bold text-slate-400 mt-0.5 pointer-events-none">(1,4)</span>
+            </button>
+            <button class="interactive-btn key-btn rounded-2xl flex flex-col items-center justify-center" data-char="R" data-speech="r" data-x="2" data-y="4">
+                <span class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight pointer-events-none">R</span>
+                <span class="text-[10px] sm:text-xs font-mono font-bold text-slate-400 mt-0.5 pointer-events-none">(2,4)</span>
+            </button>
+            <button class="interactive-btn key-btn rounded-2xl flex flex-col items-center justify-center" data-char="S" data-speech="s" data-x="3" data-y="4">
+                <span class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight pointer-events-none">S</span>
+                <span class="text-[10px] sm:text-xs font-mono font-bold text-slate-400 mt-0.5 pointer-events-none">(3,4)</span>
+            </button>
+            <button class="interactive-btn key-btn rounded-2xl flex flex-col items-center justify-center" data-char="T" data-speech="t" data-x="4" data-y="4">
+                <span class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight pointer-events-none">T</span>
+                <span class="text-[10px] sm:text-xs font-mono font-bold text-slate-400 mt-0.5 pointer-events-none">(4,4)</span>
+            </button>
+            <button class="interactive-btn key-btn rounded-2xl flex flex-col items-center justify-center" data-char="U" data-speech="u" data-x="5" data-y="4">
+                <span class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight pointer-events-none">U</span>
+                <span class="text-[10px] sm:text-xs font-mono font-bold text-slate-400 mt-0.5 pointer-events-none">(5,4)</span>
+            </button>
+
+            <!-- Row 5: V, W, X, Y, Z -->
+            <button class="interactive-btn key-btn rounded-2xl flex flex-col items-center justify-center" data-char="V" data-speech="v" data-x="1" data-y="5">
+                <span class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight pointer-events-none">V</span>
+                <span class="text-[10px] sm:text-xs font-mono font-bold text-slate-400 mt-0.5 pointer-events-none">(1,5)</span>
+            </button>
+            <button class="interactive-btn key-btn rounded-2xl flex flex-col items-center justify-center" data-char="W" data-speech="w" data-x="2" data-y="5">
+                <span class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight pointer-events-none">W</span>
+                <span class="text-[10px] sm:text-xs font-mono font-bold text-slate-400 mt-0.5 pointer-events-none">(2,5)</span>
+            </button>
+            <button class="interactive-btn key-btn rounded-2xl flex flex-col items-center justify-center" data-char="X" data-speech="x" data-x="3" data-y="5">
+                <span class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight pointer-events-none">X</span>
+                <span class="text-[10px] sm:text-xs font-mono font-bold text-slate-400 mt-0.5 pointer-events-none">(3,5)</span>
+            </button>
+            <button class="interactive-btn key-btn rounded-2xl flex flex-col items-center justify-center" data-char="Y" data-speech="y" data-x="4" data-y="5">
+                <span class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight pointer-events-none">Y</span>
+                <span class="text-[10px] sm:text-xs font-mono font-bold text-slate-400 mt-0.5 pointer-events-none">(4,5)</span>
+            </button>
+            <button class="interactive-btn key-btn rounded-2xl flex flex-col items-center justify-center" data-char="Z" data-speech="z" data-x="5" data-y="5">
+                <span class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight pointer-events-none">Z</span>
+                <span class="text-[10px] sm:text-xs font-mono font-bold text-slate-400 mt-0.5 pointer-events-none">(5,5)</span>
+            </button>
+        </div>
+
+        <!-- RIGHT EDGE SPACE BUTTON -->
+        <button class="interactive-btn w-12 sm:w-20 lg:w-24 h-full rounded-2xl bg-indigo-950/40 border-indigo-800/80 flex flex-col items-center justify-center gap-3 text-indigo-300 hover:text-white flex-none"
+                data-char=" " 
+                data-speech="space" 
+                data-action="SPACE">
+            <i class="fa-solid fa-arrows-left-right text-xl sm:text-2xl pointer-events-none"></i>
+            <span class="font-black text-xs sm:text-base tracking-widest vertical-text pointer-events-none">SPACE</span>
+            <i class="fa-solid fa-arrows-left-right text-xl sm:text-2xl pointer-events-none"></i>
+        </button>
+
+    </main>
 
     <script>
         let typedText = "";
@@ -281,6 +288,12 @@
             utterance.volume = 1.0;
             
             window.speechSynthesis.speak(utterance);
+        }
+
+        function sendQuery() {
+            if (!typedText.trim()) return;
+            const targetUrl = `https://scottfree.vercel.app/?q=${encodeURIComponent(typedText)}`;
+            window.location.href = targetUrl;
         }
 
         function updateDisplay() {
@@ -342,6 +355,10 @@
                     typedText = typedText.slice(0, -1);
                 } else if (action === 'CLEAR') {
                     typedText = '';
+                } else if (action === 'SEND') {
+                    if (speechText) speak(speechText, false);
+                    sendQuery();
+                    return;
                 } else if (char !== null) {
                     typedText += char;
                 }
@@ -402,6 +419,9 @@
                 typedText = '';
                 updateDisplay();
                 speak('clear', true);
+            } else if (e.key === 'Enter') {
+                speak('send', true);
+                sendQuery();
             }
         });
     </script>
