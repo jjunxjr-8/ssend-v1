@@ -28,6 +28,18 @@
             background-color: #059669 !important; border-color: #6ee7b7 !important; transform: scale(0.94);
         }
         .vertical-text { writing-mode: vertical-rl; text-orientation: mixed; }
+        
+        /* Mic Recording Pulse Animation */
+        @keyframes mic-pulse {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        .recording-active {
+            background-color: #dc2626 !important;
+            border-color: #fca5a5 !important;
+            animation: mic-pulse 1.5s infinite;
+        }
     </style>
 </head>
 <body class="h-screen w-screen bg-slate-950 text-slate-100 flex flex-col p-2 sm:p-3 gap-2 sm:gap-3 overflow-hidden select-none">
@@ -50,13 +62,18 @@
                 autocorrect="off" 
                 autocapitalize="characters" 
                 spellcheck="false" 
-                placeholder="TYPE HERE..."
+                placeholder="TYPE OR SPEAK..."
                 class="w-full bg-transparent font-mono text-xl sm:text-3xl font-extrabold tracking-wider text-emerald-400 focus:outline-none uppercase placeholder:text-slate-700"
             />
         </div>
 
         <!-- Actions -->
         <div class="flex items-center gap-2 flex-none">
+            <!-- Mic Toggle Button -->
+            <button id="btnMic" class="interactive-btn h-11 sm:h-14 px-3 sm:px-5 bg-slate-800 border-slate-700 rounded-xl font-mono font-bold text-rose-400 flex items-center justify-center gap-1.5" title="Toggle Voice Recognition">
+                <i id="micIcon" class="fa-solid fa-microphone text-lg sm:text-xl pointer-events-none"></i>
+                <span id="micText" class="hidden sm:inline font-bold text-xs pointer-events-none">VOICE</span>
+            </button>
             <button id="btnBackspace" class="interactive-btn h-11 sm:h-14 px-3 sm:px-5 bg-slate-800 border-slate-700 rounded-xl font-mono font-bold text-amber-400 flex items-center justify-center gap-1.5" data-action="BACKSPACE" data-speech="backspace">
                 <i class="fa-solid fa-delete-left text-lg sm:text-xl pointer-events-none"></i>
                 <span class="hidden sm:inline font-bold text-xs pointer-events-none">DEL</span>
@@ -168,6 +185,76 @@
             window.speechSynthesis.speak(utterance);
         }
 
+        /* VOICE RECOGNITION INTEGRATION */
+        const btnMic = document.getElementById('btnMic');
+        const micIcon = document.getElementById('micIcon');
+        const micText = document.getElementById('micText');
+        
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition = null;
+        let isListening = false;
+
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';
+
+            recognition.onstart = () => {
+                isListening = true;
+                btnMic.classList.add('recording-active');
+                micIcon.className = "fa-solid fa-microphone-lines text-lg sm:text-xl text-white pointer-events-none";
+                if (micText) micText.innerText = "REC";
+            };
+
+            recognition.onresult = (event) => {
+                let currentTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    currentTranscript += event.results[i][0].transcript;
+                }
+                displayEl.value = currentTranscript.toUpperCase();
+            };
+
+            recognition.onerror = (e) => {
+                console.error("Speech recognition error:", e.error);
+                stopListening();
+            };
+
+            recognition.onend = () => {
+                if (isListening) {
+                    // Auto-restart if user didn't explicitly turn it off
+                    try { recognition.start(); } catch (err) { stopListening(); }
+                } else {
+                    stopListening();
+                }
+            };
+        } else {
+            btnMic.classList.add('opacity-50', 'cursor-not-allowed');
+            btnMic.title = "Voice recognition is not supported in this browser.";
+        }
+
+        function startListening() {
+            if (!recognition) return alert("Speech recognition is not supported in your browser.");
+            isListening = true;
+            recognition.start();
+        }
+
+        function stopListening() {
+            isListening = false;
+            if (recognition) recognition.stop();
+            btnMic.classList.remove('recording-active');
+            micIcon.className = "fa-solid fa-microphone text-lg sm:text-xl pointer-events-none";
+            if (micText) micText.innerText = "VOICE";
+        }
+
+        btnMic.addEventListener('click', () => {
+            if (isListening) {
+                stopListening();
+            } else {
+                startListening();
+            }
+        });
+
         function getButtonFromPoint(clientX, clientY) {
             const target = document.elementFromPoint(clientX, clientY);
             return target ? target.closest('.interactive-btn') : null;
@@ -186,8 +273,8 @@
 
         // Pointer event handlers for screen button navigation
         window.addEventListener('pointerdown', (e) => { 
-            // Prevent pointer capture if tapping input field directly
-            if (e.target === displayEl) return;
+            // Prevent pointer capture if tapping input field directly or mic button
+            if (e.target === displayEl || e.target.closest('#btnMic')) return;
             isPointerDown = true; 
             setHighlight(getButtonFromPoint(e.clientX, e.clientY)); 
         });
@@ -199,7 +286,7 @@
         window.addEventListener('pointerup', (e) => {
             if (!isPointerDown) return;
             const btn = getButtonFromPoint(e.clientX, e.clientY);
-            if (btn) {
+            if (btn && btn !== btnMic) {
                 const action = btn.getAttribute('data-action');
                 const char = btn.getAttribute('data-char');
                 if (action === 'BACKSPACE') displayEl.value = displayEl.value.slice(0, -1);
