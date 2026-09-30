@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Voice Sender</title>
+    <title>Voice Sender & Reader</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -34,6 +34,18 @@
             background-color: #dc2626 !important;
             border-color: #fca5a5 !important;
             animation: mic-pulse 1.5s infinite;
+        }
+
+        /* Pulsing animation while actively reading aloud */
+        @keyframes speak-pulse {
+            0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+            70% { box-shadow: 0 0 0 25px rgba(59, 130, 246, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+        .speaking-active {
+            background-color: #2563eb !important;
+            border-color: #93c5fd !important;
+            animation: speak-pulse 1.5s infinite;
         }
     </style>
 </head>
@@ -67,18 +79,24 @@
     </header>
 
     <!-- MAIN BUTTONS INTERFACE -->
-    <main class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 w-full h-full min-h-0">
+    <main class="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 w-full h-full min-h-0">
         
         <!-- Big Voice Button -->
         <button id="btnMic" class="big-btn h-full w-full bg-slate-900 hover:bg-slate-850 border-4 border-rose-600/60 rounded-3xl flex flex-col items-center justify-center gap-4 text-rose-400 shadow-2xl">
-            <i id="micIcon" class="fa-solid fa-microphone text-6xl sm:text-8xl"></i>
-            <span id="micText" class="font-black text-2xl sm:text-4xl tracking-wider uppercase">START VOICE</span>
+            <i id="micIcon" class="fa-solid fa-microphone text-5xl sm:text-7xl"></i>
+            <span id="micText" class="font-black text-xl sm:text-3xl tracking-wider uppercase">START VOICE</span>
+        </button>
+
+        <!-- Big Read Aloud Button -->
+        <button id="btnRead" class="big-btn h-full w-full bg-slate-900 hover:bg-slate-850 border-4 border-blue-600/60 rounded-3xl flex flex-col items-center justify-center gap-4 text-blue-400 shadow-2xl">
+            <i id="readIcon" class="fa-solid fa-volume-high text-5xl sm:text-7xl"></i>
+            <span id="readText" class="font-black text-xl sm:text-3xl tracking-wider uppercase">READ</span>
         </button>
 
         <!-- Big Send Button -->
         <button id="btnSend" class="big-btn h-full w-full bg-emerald-600 hover:bg-emerald-500 border-4 border-emerald-400 rounded-3xl flex flex-col items-center justify-center gap-4 text-white shadow-2xl shadow-emerald-950/50">
-            <i class="fa-solid fa-paper-plane text-6xl sm:text-8xl"></i>
-            <span class="font-black text-2xl sm:text-4xl tracking-wider uppercase">SEND</span>
+            <i class="fa-solid fa-paper-plane text-5xl sm:text-7xl"></i>
+            <span class="font-black text-xl sm:text-3xl tracking-wider uppercase">SEND</span>
         </button>
 
     </main>
@@ -89,6 +107,9 @@
         const btnMic = document.getElementById('btnMic');
         const micIcon = document.getElementById('micIcon');
         const micText = document.getElementById('micText');
+        const btnRead = document.getElementById('btnRead');
+        const readIcon = document.getElementById('readIcon');
+        const readText = document.getElementById('readText');
         const btnSend = document.getElementById('btnSend');
 
         // Shared Room Topic
@@ -127,6 +148,46 @@
             displayEl.value = "";
         }
 
+        /* TEXT-TO-SPEECH (READ ALOUD) SETUP */
+        function readMessageAloud() {
+            const textToRead = displayEl.value.trim();
+            if (!textToRead) return;
+
+            if ('speechSynthesis' in window) {
+                // Cancel any ongoing speech
+                window.speechSynthesis.cancel();
+
+                const utterance = new SpeechSynthesisUtterance(textToRead);
+                utterance.lang = 'en-US';
+
+                utterance.onstart = () => {
+                    btnRead.classList.add('speaking-active');
+                    btnRead.classList.remove('border-blue-600/60');
+                    readIcon.className = "fa-solid fa-volume-high text-5xl sm:text-7xl text-white";
+                    readText.innerText = "READING...";
+                };
+
+                utterance.onend = () => {
+                    resetReadButton();
+                };
+
+                utterance.onerror = () => {
+                    resetReadButton();
+                };
+
+                window.speechSynthesis.speak(utterance);
+            } else {
+                alert("Text-to-speech is not supported in this browser.");
+            }
+        }
+
+        function resetReadButton() {
+            btnRead.classList.remove('speaking-active');
+            btnRead.classList.add('border-blue-600/60');
+            readIcon.className = "fa-solid fa-volume-high text-5xl sm:text-7xl";
+            readText.innerText = "READ";
+        }
+
         /* VOICE RECOGNITION SETUP */
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         let recognition = null;
@@ -142,7 +203,7 @@
                 isListening = true;
                 btnMic.classList.add('recording-active');
                 btnMic.classList.remove('border-rose-600/60');
-                micIcon.className = "fa-solid fa-microphone-lines text-6xl sm:text-8xl text-white";
+                micIcon.className = "fa-solid fa-microphone-lines text-5xl sm:text-7xl text-white";
                 micText.innerText = "LISTENING...";
             };
 
@@ -182,7 +243,7 @@
             if (recognition) recognition.stop();
             btnMic.classList.remove('recording-active');
             btnMic.classList.add('border-rose-600/60');
-            micIcon.className = "fa-solid fa-microphone text-6xl sm:text-8xl";
+            micIcon.className = "fa-solid fa-microphone text-5xl sm:text-7xl";
             micText.innerText = "START VOICE";
         }
 
@@ -194,12 +255,23 @@
             }
         });
 
+        btnRead.addEventListener('click', () => {
+            if (window.speechSynthesis && window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+                resetReadButton();
+            } else {
+                readMessageAloud();
+            }
+        });
+
         btnSend.addEventListener('click', () => {
             sendQueryOverCloud();
         });
 
         btnClear.addEventListener('click', () => {
             displayEl.value = '';
+            if (window.speechSynthesis) window.speechSynthesis.cancel();
+            resetReadButton();
         });
 
         // Handle ENTER key submission from physical / mobile keyboard
