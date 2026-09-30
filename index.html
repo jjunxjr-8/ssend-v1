@@ -13,11 +13,12 @@
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 
     <style>
-        * { user-select: none; -webkit-user-select: none; touch-action: none; }
+        * { user-select: none; -webkit-user-select: none; }
         body { font-family: 'Inter', sans-serif; overscroll-behavior: none; }
         .interactive-btn {
             position: relative; background: #1e293b; border: 2px solid #334155;
             transition: background-color 0.05s ease, border-color 0.05s ease, transform 0.05s ease;
+            touch-action: none;
         }
         .interactive-btn.drag-hover {
             background-color: #4f46e5 !important; border-color: #a5b4fc !important;
@@ -26,8 +27,6 @@
         .interactive-btn.active-click {
             background-color: #059669 !important; border-color: #6ee7b7 !important; transform: scale(0.94);
         }
-        .cursor-blink { animation: blink 1s step-end infinite; }
-        @keyframes blink { 50% { opacity: 0; } }
         .vertical-text { writing-mode: vertical-rl; text-orientation: mixed; }
     </style>
 </head>
@@ -42,10 +41,18 @@
             <span id="statusText" class="font-mono text-xs font-bold text-slate-400 uppercase">Connecting...</span>
         </div>
 
-        <!-- Output Display -->
-        <div class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 sm:py-3 flex items-center overflow-x-auto min-w-0">
-            <span id="outputDisplay" class="font-mono text-2xl sm:text-4xl font-extrabold tracking-wider text-emerald-400 whitespace-pre"></span>
-            <span class="w-3 h-7 sm:h-9 bg-emerald-400 inline-block ml-1 rounded-sm cursor-blink flex-none"></span>
+        <!-- Editable Output Display Input -->
+        <div class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-1 sm:py-2 flex items-center min-w-0 focus-within:border-emerald-500 transition-colors">
+            <input 
+                id="outputDisplay" 
+                type="text" 
+                autocomplete="off" 
+                autocorrect="off" 
+                autocapitalize="characters" 
+                spellcheck="false" 
+                placeholder="TYPE HERE..."
+                class="w-full bg-transparent font-mono text-xl sm:text-3xl font-extrabold tracking-wider text-emerald-400 focus:outline-none uppercase placeholder:text-slate-700"
+            />
         </div>
 
         <!-- Actions -->
@@ -111,12 +118,11 @@
     </main>
 
     <script>
-        let typedText = "";
         let isPointerDown = false;
         let currentHighlightedBtn = null;
         const displayEl = document.getElementById('outputDisplay');
 
-        // Shared Room Topic (Change this string if you want a custom private room name)
+        // Shared Room Topic
         const ROOM_TOPIC = "scottfree/live_queries/channel_1";
         
         // Connect to public WebSocket broker
@@ -135,7 +141,8 @@
         });
 
         function sendQueryOverCloud() {
-            if (!typedText.trim()) return;
+            const typedText = displayEl.value.trim();
+            if (!typedText) return;
             
             const payload = JSON.stringify({
                 text: typedText,
@@ -149,8 +156,7 @@
             sendBtn.classList.add('bg-emerald-400');
             setTimeout(() => sendBtn.classList.remove('bg-emerald-400'), 300);
 
-            typedText = "";
-            updateDisplay();
+            displayEl.value = "";
         }
 
         function speak(text) {
@@ -160,11 +166,6 @@
             const utterance = new SpeechSynthesisUtterance(speechString);
             utterance.rate = 1.25;
             window.speechSynthesis.speak(utterance);
-        }
-
-        function updateDisplay() {
-            displayEl.innerText = typedText;
-            displayEl.parentElement.scrollLeft = displayEl.parentElement.scrollWidth;
         }
 
         function getButtonFromPoint(clientX, clientY) {
@@ -183,30 +184,38 @@
             }
         }
 
-        window.addEventListener('pointerdown', (e) => { isPointerDown = true; setHighlight(getButtonFromPoint(e.clientX, e.clientY)); });
-        window.addEventListener('pointermove', (e) => { if (isPointerDown) setHighlight(getButtonFromPoint(e.clientX, e.clientY)); });
+        // Pointer event handlers for screen button navigation
+        window.addEventListener('pointerdown', (e) => { 
+            // Prevent pointer capture if tapping input field directly
+            if (e.target === displayEl) return;
+            isPointerDown = true; 
+            setHighlight(getButtonFromPoint(e.clientX, e.clientY)); 
+        });
+
+        window.addEventListener('pointermove', (e) => { 
+            if (isPointerDown) setHighlight(getButtonFromPoint(e.clientX, e.clientY)); 
+        });
+
         window.addEventListener('pointerup', (e) => {
             if (!isPointerDown) return;
             const btn = getButtonFromPoint(e.clientX, e.clientY);
             if (btn) {
                 const action = btn.getAttribute('data-action');
                 const char = btn.getAttribute('data-char');
-                if (action === 'BACKSPACE') typedText = typedText.slice(0, -1);
-                else if (action === 'CLEAR') typedText = '';
+                if (action === 'BACKSPACE') displayEl.value = displayEl.value.slice(0, -1);
+                else if (action === 'CLEAR') displayEl.value = '';
                 else if (action === 'SEND') sendQueryOverCloud();
-                else if (char !== null) typedText += char;
-                updateDisplay();
+                else if (char !== null) displayEl.value += char;
             }
             setHighlight(null);
             isPointerDown = false;
         });
 
-        window.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') sendQueryOverCloud();
-            else if (e.key === 'Backspace') { typedText = typedText.slice(0, -1); updateDisplay(); }
-            else if (e.key === 'Escape') { typedText = ''; updateDisplay(); }
-            else if (/^[a-zA-Z ]$/.test(e.key) && e.key.toUpperCase() !== 'K') {
-                typedText += e.key.toUpperCase(); updateDisplay();
+        // Handle ENTER key submission from mobile / physical keyboards
+        displayEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                sendQueryOverCloud();
             }
         });
     </script>
